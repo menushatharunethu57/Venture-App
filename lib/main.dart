@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MaterialApp(home: Home()));
+  runApp(
+    MaterialApp(
+      home: Home(),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF2D5F5D),
+          brightness: Brightness.light,
+        ),
+        appBarTheme: const AppBarTheme(elevation: 0, centerTitle: false),
+      ),
+    ),
+  );
 }
 
 class Home extends StatefulWidget {
@@ -16,24 +28,29 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green,
-        title: Text(
+        backgroundColor: const Color(0xFF2D5F5D),
+        title: const Text(
           "Venture",
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 30,
+            letterSpacing: 1.2,
           ),
         ),
         actions: [
           IconButton(
             onPressed: () {},
-            icon: Icon(Icons.person),
-            style: IconButton.styleFrom(foregroundColor: Colors.white),
+            icon: const Icon(Icons.person_outline),
+            style: IconButton.styleFrom(
+              foregroundColor: Colors.white,
+              iconSize: 28,
+            ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
-      body: Body(),
+      body: const Body(),
     );
   }
 }
@@ -46,11 +63,143 @@ class Body extends StatefulWidget {
 }
 
 class _BodyState extends State<Body> {
+  final List<Map<String, String>> categories = [
+    {
+      'image':
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+      'name': 'Alpine Escapes',
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400',
+      'name': 'Coastal Havens',
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1621978093536-da2293471e00?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=400',
+      'name': 'Urban Pulse',
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1612862862126-865765df2ded?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=400',
+      'name': 'Ancient Wonders',
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1566650576880-6740b03eaad1?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=400',
+      'name': 'Wild Safaris',
+    },
+    {
+      'image':
+          'https://images.unsplash.com/photo-1683647986987-bcd7c320f3a1?q=80&w=1087&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=400',
+      'name': 'Hidden Retreats',
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(20.0),
-      child: Column(children: [Text("Explore the Unexplored")]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 20),
+          Text(
+            "Explore the Unexplored",
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF2D5F5D),
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Begin your adventure today",
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(height: 30),
+          Expanded(
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.85,
+              ),
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
+                return _buildCategoryCard(
+                  categories[index]['image']!,
+                  categories[index]['name']!,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCategoryCard(String imageUrl, String name) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {},
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[300],
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: Colors.white,
+              child: Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
