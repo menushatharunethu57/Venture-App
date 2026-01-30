@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login.dart';
 
 void main() {
   runApp(
@@ -24,8 +25,40 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    BottomNavigationBarItem _navItem(
+      IconData icon,
+      IconData activeIcon,
+      String label,
+      int index,
+    ) {
+      return BottomNavigationBarItem(
+        label: label,
+        icon: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          transitionBuilder: (child, animation) {
+            return ScaleTransition(
+              scale: animation,
+              child: FadeTransition(opacity: animation, child: child),
+            );
+          },
+          child: Icon(
+            _selectedIndex == index ? activeIcon : icon,
+            key: ValueKey(_selectedIndex == index),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF2D5F5D),
@@ -40,7 +73,14 @@ class _HomeState extends State<Home> {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              setState(() {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => Loginpg()),
+                );
+              });
+            },
             icon: const Icon(Icons.person_outline),
             style: IconButton.styleFrom(
               foregroundColor: Colors.white,
@@ -51,6 +91,21 @@ class _HomeState extends State<Home> {
         ],
       ),
       body: const Body(),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: const Color(0xFF2D5F5D),
+        selectedItemColor: Colors.amber,
+        unselectedItemColor: Colors.white,
+        showUnselectedLabels: true,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        items: [
+          _navItem(Icons.home_outlined, Icons.home, 'Home', 0),
+          _navItem(Icons.explore_outlined, Icons.explore, 'Explore', 1),
+          _navItem(Icons.favorite_outline, Icons.favorite, 'Saved', 2),
+          _navItem(Icons.person_outline, Icons.person, 'Profile', 3),
+        ],
+      ),
     );
   }
 }
