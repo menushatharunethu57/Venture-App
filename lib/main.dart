@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
+import 'category_detail_page.dart';
 
 void main() {
   runApp(
@@ -121,17 +122,17 @@ class _BodyState extends State<Body> {
   final List<Map<String, String>> categories = [
     {
       'image':
-          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+          'https://images.unsplash.com/photo-1653151106766-52f14da3bb68?q=80&w=1173&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=400',
       'name': 'Alpine Escapes',
     },
     {
       'image':
-          'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400',
+          'https://images.unsplash.com/photo-1724031948257-8b3c68232ccc?q=80&w=670&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=400',
       'name': 'Coastal Havens',
     },
     {
       'image':
-          'https://images.unsplash.com/photo-1621978093536-da2293471e00?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=400',
+          'https://images.unsplash.com/photo-1509982724584-2ce0d4366d8b?q=80&w=1230&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D?w=400',
       'name': 'Urban Pulse',
     },
     {
@@ -189,6 +190,7 @@ class _BodyState extends State<Body> {
               itemCount: categories.length,
               itemBuilder: (context, index) {
                 return _buildCategoryCard(
+                  context,
                   categories[index]['image']!,
                   categories[index]['name']!,
                 );
@@ -200,13 +202,27 @@ class _BodyState extends State<Body> {
     );
   }
 
-  Widget _buildCategoryCard(String imageUrl, String name) {
+  Widget _buildCategoryCard(
+    BuildContext context,
+    String imageUrl,
+    String name,
+  ) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CategoryDetailPage(
+                categoryName: name,
+                categoryImage: imageUrl,
+              ),
+            ),
+          );
+        },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
