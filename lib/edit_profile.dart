@@ -1,7 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'profile.dart';
 
 class Editpg extends StatefulWidget {
@@ -25,8 +22,6 @@ class Editpg extends StatefulWidget {
 }
 
 class _EditpgState extends State<Editpg> {
-  File? image;
-  String imagePath = "";
   TextEditingController name = TextEditingController();
   TextEditingController contact = TextEditingController();
   TextEditingController mail = TextEditingController();
@@ -39,41 +34,9 @@ class _EditpgState extends State<Editpg> {
     contact.text = widget.value2;
     mail.text = widget.value3;
     about.text = widget.value4;
-    imagePath = widget.value5;
-
-    if (imagePath.isNotEmpty) {
-      image = File(imagePath);
-    }
   }
 
-  Future pickProfileImage(ImageSource source) async {
-    final picked = await ImagePicker().pickImage(source: source);
-    if (picked != null) {
-      setState(() {
-        image = File(picked.path);
-        imagePath = picked.path;
-      });
-    }
-  }
-
-  void removeImage() {
-    setState(() {
-      image = null;
-      imagePath = "";
-    });
-  }
-
-  Future<void> saveData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('name', name.text);
-    await prefs.setString('contact', contact.text);
-    await prefs.setString('email', mail.text);
-    await prefs.setString('about', about.text);
-    await prefs.setString('imagePath', imagePath);
-  }
-
-  void navigate() async {
-    await saveData();
+  void navigate() {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -82,7 +45,7 @@ class _EditpgState extends State<Editpg> {
           value2: contact.text,
           value3: mail.text,
           value4: about.text,
-          value5: imagePath,
+          value5: '',
         ),
       ),
     );
@@ -112,13 +75,10 @@ class _EditpgState extends State<Editpg> {
         ],
       ),
       body: Body(
-        image: image,
         name: name,
         contact: contact,
         mail: mail,
         about: about,
-        pickProfileImage: pickProfileImage,
-        removeImage: removeImage,
         navigate: navigate,
       ),
     );
@@ -128,23 +88,17 @@ class _EditpgState extends State<Editpg> {
 class Body extends StatelessWidget {
   const Body({
     super.key,
-    required this.image,
     required this.name,
     required this.contact,
     required this.mail,
     required this.about,
-    required this.pickProfileImage,
-    required this.removeImage,
     required this.navigate,
   });
 
-  final File? image;
   final TextEditingController name;
   final TextEditingController contact;
   final TextEditingController mail;
   final TextEditingController about;
-  final Future<void> Function(ImageSource source) pickProfileImage;
-  final VoidCallback removeImage;
   final VoidCallback navigate;
 
   @override
@@ -156,105 +110,14 @@ class Body extends StatelessWidget {
           children: [
             SizedBox(height: 30),
             Center(
-              child: Stack(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.grey,
-                    radius: 60,
-                    backgroundImage: image != null ? FileImage(image!) : null,
-                    child: image == null
-                        ? ClipOval(
-                            child: Image.network(
-                              "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Circle-icons-profile.svg/3840px-Circle-icons-profile.svg.png",
-                              fit: BoxFit.cover,
-                              width: 120,
-                              height: 120,
-                            ),
-                          )
-                        : null,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: () {
-                        showModalBottomSheet(
-                          context: context,
-                          builder: (context) {
-                            return SafeArea(
-                              child: Padding(
-                                padding: const EdgeInsets.all(20.0),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        pickProfileImage(ImageSource.camera);
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.all(15),
-                                        child: Text(
-                                          "Take Photo",
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                      ),
-                                    ),
-                                    Divider(),
-                                    GestureDetector(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        pickProfileImage(ImageSource.gallery);
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.all(15),
-                                        child: Text(
-                                          "Choose from Gallery",
-                                          style: TextStyle(fontSize: 16),
-                                        ),
-                                      ),
-                                    ),
-                                    if (image != null) Divider(),
-                                    if (image != null)
-                                      GestureDetector(
-                                        onTap: () {
-                                          Navigator.pop(context);
-                                          removeImage();
-                                        },
-                                        child: Container(
-                                          padding: EdgeInsets.all(15),
-                                          child: Text(
-                                            "Remove Photo",
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              color: Colors.red,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF2D5F5D),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                        ),
-                        child: Icon(
-                          Icons.camera_alt,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              child: CircleAvatar(
+                backgroundColor: Colors.grey[300],
+                radius: 60,
+                child: Icon(
+                  Icons.person,
+                  size: 80,
+                  color: Colors.grey[600],
+                ),
               ),
             ),
             SizedBox(height: 50),

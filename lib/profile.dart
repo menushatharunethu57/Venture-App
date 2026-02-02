@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'edit_profile.dart';
 
 class Profilepg extends StatefulWidget {
@@ -71,30 +69,6 @@ class Body extends StatefulWidget {
 }
 
 class _BodyState extends State<Body> {
-  String displayName = "";
-  String displayContact = "";
-  String displayEmail = "";
-  String displayAbout = "";
-  String displayImagePath = "";
-
-  @override
-  void initState() {
-    super.initState();
-    loadData();
-  }
-
-  void loadData() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    setState(() {
-      displayName = prefs.getString('name') ?? widget.value1;
-      displayContact = prefs.getString('contact') ?? widget.value2;
-      displayEmail = prefs.getString('email') ?? widget.value3;
-      displayAbout = prefs.getString('about') ?? widget.value4;
-      displayImagePath = prefs.getString('imagePath') ?? widget.value5;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -108,21 +82,13 @@ class _BodyState extends State<Body> {
                 child: Stack(
                   children: [
                     CircleAvatar(
-                      backgroundColor: Colors.grey,
+                      backgroundColor: Colors.grey[300],
                       radius: 60,
-                      backgroundImage: displayImagePath.isNotEmpty
-                          ? FileImage(File(displayImagePath))
-                          : null,
-                      child: displayImagePath.isEmpty
-                          ? ClipOval(
-                              child: Image.network(
-                                fit: BoxFit.cover,
-                                width: 120,
-                                height: 120,
-                                "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Circle-icons-profile.svg/3840px-Circle-icons-profile.svg.png",
-                              ),
-                            )
-                          : null,
+                      child: Icon(
+                        Icons.person,
+                        size: 80,
+                        color: Colors.grey[600],
+                      ),
                     ),
                     Positioned(
                       top: 0,
@@ -133,11 +99,11 @@ class _BodyState extends State<Body> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => Editpg(
-                                value1: displayName,
-                                value2: displayContact,
-                                value3: displayEmail,
-                                value4: displayAbout,
-                                value5: displayImagePath,
+                                value1: widget.value1,
+                                value2: widget.value2,
+                                value3: widget.value3,
+                                value4: widget.value4,
+                                value5: widget.value5,
                               ),
                             ),
                           );
@@ -184,7 +150,7 @@ class _BodyState extends State<Body> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(left: 34),
-                              child: Text(displayName),
+                              child: Text(widget.value1),
                             ),
                           ],
                         ),
@@ -203,7 +169,7 @@ class _BodyState extends State<Body> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(left: 34),
-                              child: Text(displayContact),
+                              child: Text(widget.value2),
                             ),
                           ],
                         ),
@@ -222,7 +188,7 @@ class _BodyState extends State<Body> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(left: 34),
-                              child: Text(displayEmail),
+                              child: Text(widget.value3),
                             ),
                           ],
                         ),
@@ -241,7 +207,7 @@ class _BodyState extends State<Body> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(left: 34),
-                              child: Text(displayAbout),
+                              child: Text(widget.value4),
                             ),
                           ],
                         ),

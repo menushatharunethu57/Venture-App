@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
 import 'category_detail_page.dart';
+import 'profile.dart';
 
 void main() {
   runApp(
     MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Home(),
       theme: ThemeData(
         useMaterial3: true,
@@ -27,6 +29,19 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   int _selectedIndex = 0;
+
+  final List<Widget> _pages = [
+    const Body(),
+    const Center(child: Text('Explore Page')),
+    const Center(child: Text('Saved Page')),
+    const Profilepg(
+      value1: 'John Doe',
+      value2: '+1 234 567 8900',
+      value3: 'johndoe@example.com',
+      value4: 'Travel enthusiast and adventure seeker',
+      value5: '',
+    ),
+  ];
 
   void _onItemTapped(int index) {
     setState(() {
@@ -61,37 +76,37 @@ class _HomeState extends State<Home> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF2D5F5D),
-        title: const Text(
-          "Venture",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 30,
-            letterSpacing: 1.2,
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              setState(() {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => Loginpg()),
-                );
-              });
-            },
-            icon: const Icon(Icons.person_outline),
-            style: IconButton.styleFrom(
-              foregroundColor: Colors.white,
-              iconSize: 28,
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: const Body(),
+      appBar: _selectedIndex != 3
+          ? AppBar(
+              backgroundColor: const Color(0xFF2D5F5D),
+              title: const Text(
+                "Venture",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 30,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Loginpg()),
+                    );
+                  },
+                  icon: const Icon(Icons.person_outline),
+                  style: IconButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    iconSize: 28,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+            )
+          : null,
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: const Color(0xFF2D5F5D),
