@@ -6,7 +6,6 @@ import 'profile.dart';
 void main() {
   runApp(
     MaterialApp(
-      debugShowCheckedModeBanner: false,
       home: Home(),
       theme: ThemeData(
         useMaterial3: true,
@@ -47,38 +46,6 @@ class _HomeState extends State<Home> {
     setState(() {
       _selectedIndex = index;
     });
-  }
-
-  // Method to return the appropriate page based on selected index
-  Widget _getSelectedPage() {
-    switch (_selectedIndex) {
-      case 0:
-        return const Body(); // Home page
-      case 1:
-        return const Center(
-          child: Text(
-            'Explore Page',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-        ); // Placeholder for Explore
-      case 2:
-        return const Center(
-          child: Text(
-            'Saved Page',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-        ); // Placeholder for Saved
-      case 3:
-        return const Profilepg(
-          value1: '',
-          value2: '',
-          value3: '',
-          value4: '',
-          value5: '',
-        ); // Profile page
-      default:
-        return const Body();
-    }
   }
 
   @override
