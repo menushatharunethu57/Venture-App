@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
 import 'category_detail_page.dart';
+import 'profile.dart';
 
 void main() {
   runApp(
@@ -32,6 +33,38 @@ class _HomeState extends State<Home> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  // Method to return the appropriate page based on selected index
+  Widget _getSelectedPage() {
+    switch (_selectedIndex) {
+      case 0:
+        return const Body(); // Home page
+      case 1:
+        return const Center(
+          child: Text(
+            'Explore Page',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        ); // Placeholder for Explore
+      case 2:
+        return const Center(
+          child: Text(
+            'Saved Page',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          ),
+        ); // Placeholder for Saved
+      case 3:
+        return const Profilepg(
+          value1: '',
+          value2: '',
+          value3: '',
+          value4: '',
+          value5: '',
+        ); // Profile page
+      default:
+        return const Body();
+    }
   }
 
   @override
@@ -75,12 +108,10 @@ class _HomeState extends State<Home> {
         actions: [
           IconButton(
             onPressed: () {
-              setState(() {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => Loginpg()),
-                );
-              });
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => Loginpg()),
+              );
             },
             icon: const Icon(Icons.person_outline),
             style: IconButton.styleFrom(
@@ -91,7 +122,7 @@ class _HomeState extends State<Home> {
           const SizedBox(width: 8),
         ],
       ),
-      body: const Body(),
+      body: _getSelectedPage(), // Changed to use the method
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: const Color(0xFF2D5F5D),
