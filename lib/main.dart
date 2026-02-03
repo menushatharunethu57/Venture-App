@@ -6,6 +6,7 @@ import 'profile.dart';
 void main() {
   runApp(
     MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Home(),
       theme: ThemeData(
         useMaterial3: true,
