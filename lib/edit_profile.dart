@@ -37,7 +37,7 @@ class _EditpgState extends State<Editpg> {
   }
 
   void navigate() {
-    Navigator.push(
+    Navigator.pop(
       context,
       MaterialPageRoute(
         builder: (context) => Profilepg(
@@ -113,11 +113,7 @@ class Body extends StatelessWidget {
               child: CircleAvatar(
                 backgroundColor: Colors.grey[300],
                 radius: 60,
-                child: Icon(
-                  Icons.person,
-                  size: 80,
-                  color: Colors.grey[600],
-                ),
+                child: Icon(Icons.person, size: 80, color: Colors.grey[600]),
               ),
             ),
             SizedBox(height: 50),
@@ -165,21 +161,27 @@ class Body extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 40),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
-              height: 50,
+              height: 57,
               child: ElevatedButton(
                 onPressed: navigate,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF2D5F5D),
+                  backgroundColor: const Color(0xFF2D5F5D),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 2,
                 ),
-                child: Text(
+                child: const Text(
                   "Save",
                   style: TextStyle(
-                    color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
                   ),
                 ),
               ),

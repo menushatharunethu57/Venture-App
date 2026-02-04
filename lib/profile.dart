@@ -133,7 +133,7 @@ class _BodyState extends State<Body> {
                   shadowColor: const Color(0xFF2D5F5D),
                   elevation: 5,
                   child: Padding(
-                    padding: const EdgeInsets.all(15.0),
+                    padding: const EdgeInsets.all(30.0),
                     child: Column(
                       children: [
                         Column(
