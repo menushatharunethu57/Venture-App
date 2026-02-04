@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:venture/auth/authService.dart';
 import 'register.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Loginpg extends StatefulWidget {
   const Loginpg({super.key});
@@ -9,6 +12,8 @@ class Loginpg extends StatefulWidget {
 }
 
 class _LoginpgState extends State<Loginpg> {
+  final authservice = Authservice();
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -28,20 +33,44 @@ class _LoginpgState extends State<Loginpg> {
         _isLoading = true;
       });
 
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        final email = _emailController.text.trim();
+        final password = _passwordController.text.trim();
 
-      setState(() {
-        _isLoading = false;
-      });
+        await authservice.signIn(email, password);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: Color(0xFF2D5F5D),
-          ),
-        );
-        Navigator.pop(context);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Welcome back!'),
+              backgroundColor: Color(0xFF2D5F5D),
+            ),
+          );
+        }
+      } on AuthException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.message),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('An unexpected error occurred.'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -173,7 +202,9 @@ class _LoginpgState extends State<Loginpg> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        // TODO: Implement forgot password
+                      },
                       child: Text(
                         'Forgot Password?',
                         style: TextStyle(
@@ -237,7 +268,17 @@ class _LoginpgState extends State<Loginpg> {
                   const SizedBox(height: 24),
 
                   OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () async {
+                      try {
+                        await authservice.signInWithGoogle();
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Failed to log into google: $e"),
+                          ),
+                        );
+                      }
+                    },
                     icon: Icon(Icons.g_mobiledata, size: 28),
                     label: const Text('Continue with Google'),
                     style: OutlinedButton.styleFrom(
@@ -250,7 +291,17 @@ class _LoginpgState extends State<Loginpg> {
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed:() async {
+                      try {
+                        await authservice.signInWithGoogle();
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("Failed to log into Facebook: $e"),
+                          ),
+                        );
+                      }
+                    },
                     icon: const Icon(Icons.facebook),
                     label: const Text('Continue with Facebook'),
                     style: OutlinedButton.styleFrom(
@@ -272,14 +323,12 @@ class _LoginpgState extends State<Loginpg> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          setState(() {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => Registerpg(),
-                              ),
-                            );
-                          });
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Registerpg(),
+                            ),
+                          );
                         },
                         child: Text(
                           'Sign Up',

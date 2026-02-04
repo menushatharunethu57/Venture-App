@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:venture/auth/authgate.dart';
 import 'login.dart';
 import 'category_detail_page.dart';
 import 'profile.dart';
 
-void main() {
+void main() async{
+WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://kgmjguzrgkvrygngtbnf.supabase.co',
+    anonKey: 'sb_publishable_PgQtnEyLZbPgUnIxB72HAw_DUsrl_8O',
+  );
+
   runApp(
     MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Home(),
+      home: const Authgate(),
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -90,13 +99,10 @@ class _HomeState extends State<Home> {
               ),
               actions: [
                 IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => Loginpg()),
-                    );
+                  onPressed: () async {
+                    await Supabase.instance.client.auth.signOut();
                   },
-                  icon: const Icon(Icons.person_outline),
+                  icon: const Icon(Icons.logout),
                   style: IconButton.styleFrom(
                     foregroundColor: Colors.white,
                     iconSize: 28,

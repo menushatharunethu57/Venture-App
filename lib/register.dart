@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:venture/auth/authService.dart';
 import 'login.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Registerpg extends StatefulWidget {
   const Registerpg({super.key});
@@ -9,6 +11,8 @@ class Registerpg extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<Registerpg> {
+  final authservice = Authservice();
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -39,29 +43,60 @@ class _RegisterPageState extends State<Registerpg> {
       return;
     }
 
+ 
     if (_formKey.currentState!.validate()) {
+   
+      if (_passwordController.text != _confirmPasswordController.text) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Passwords do not match'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
       setState(() {
         _isLoading = true;
       });
 
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        final email = _emailController.text.trim();
+        final password = _passwordController.text.trim();
 
-      setState(() {
-        _isLoading = false;
-      });
+    
+        await authservice.signUp(email, password);
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful!'),
-            backgroundColor: Color(0xFF2D5F5D),
-          ),
-        );
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Loginpg()),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Registration Successful! Please check your email.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+         
+          Navigator.pop(context);
+        }
+      } on AuthException catch (e) {
+     
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('An error occurred'), backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -114,7 +149,6 @@ class _RegisterPageState extends State<Registerpg> {
                   ),
                   const SizedBox(height: 40),
 
-                  // Full Name Field
                   TextFormField(
                     controller: _nameController,
                     keyboardType: TextInputType.name,
