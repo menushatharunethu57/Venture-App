@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'saved_places_manager.dart';
 
 class CategoryDetailPage extends StatelessWidget {
   final String categoryName;
@@ -37,6 +39,7 @@ class CategoryDetailPage extends StatelessWidget {
             locations[index]['image']!,
             locations[index]['title']!,
             locations[index]['rating']!,
+            '${categoryName}_$index', // Unique ID for each place
           );
         },
       ),
@@ -48,6 +51,7 @@ class CategoryDetailPage extends StatelessWidget {
     String imageUrl,
     String title,
     String rating,
+    String placeId,
   ) {
     return Card(
       elevation: 3,
@@ -137,6 +141,41 @@ class CategoryDetailPage extends StatelessWidget {
                     ],
                   ),
                 ),
+              ),
+              Consumer<SavedPlacesManager>(
+                builder: (context, savedManager, child) {
+                  final isSaved = savedManager.isSaved(placeId);
+                  return IconButton(
+                    icon: Icon(
+                      isSaved ? Icons.favorite : Icons.favorite_border,
+                      color: isSaved ? Colors.red : Colors.grey,
+                      size: 28,
+                    ),
+                    onPressed: () {
+                      savedManager.toggleSave(
+                        SavedPlace(
+                          id: placeId,
+                          image: imageUrl,
+                          title: title,
+                          rating: rating,
+                          category: categoryName,
+                        ),
+                      );
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            isSaved
+                                ? 'Removed from saved places'
+                                : 'Added to saved places',
+                          ),
+                          duration: const Duration(seconds: 2),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
             ],
           ),

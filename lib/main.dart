@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:venture/auth/authgate.dart';
 import 'login.dart';
 import 'category_detail_page.dart';
 import 'profile.dart';
+import 'saved_places_manager.dart';
+import 'saved_page.dart';
+import 'explore_page.dart';
 
-void main() async{
-WidgetsFlutterBinding.ensureInitialized();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
     url: 'https://kgmjguzrgkvrygngtbnf.supabase.co',
@@ -14,16 +18,19 @@ WidgetsFlutterBinding.ensureInitialized();
   );
 
   runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const Authgate(),
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2D5F5D),
-          brightness: Brightness.light,
+    ChangeNotifierProvider(
+      create: (context) => SavedPlacesManager(),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: const Authgate(),
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF2D5F5D),
+            brightness: Brightness.light,
+          ),
+          appBarTheme: const AppBarTheme(elevation: 0, centerTitle: false),
         ),
-        appBarTheme: const AppBarTheme(elevation: 0, centerTitle: false),
       ),
     ),
   );
@@ -41,8 +48,8 @@ class _HomeState extends State<Home> {
 
   final List<Widget> _pages = [
     const Body(),
-    const Center(child: Text('Explore Page')),
-    const Center(child: Text('Saved Page')),
+    const ExplorePage(),
+    const SavedPage(),
     const Profilepg(
       value1: 'John Doe',
       value2: '+1 234 567 8900',
