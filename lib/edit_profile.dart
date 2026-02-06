@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'profile.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Editpg extends StatefulWidget {
   const Editpg({
@@ -22,10 +22,12 @@ class Editpg extends StatefulWidget {
 }
 
 class _EditpgState extends State<Editpg> {
+  final _supabase = Supabase.instance.client;
   TextEditingController name = TextEditingController();
   TextEditingController contact = TextEditingController();
   TextEditingController mail = TextEditingController();
   TextEditingController about = TextEditingController();
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -36,19 +38,52 @@ class _EditpgState extends State<Editpg> {
     about.text = widget.value4;
   }
 
-  void navigate() {
-    Navigator.pop(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Profilepg(
-          value1: name.text,
-          value2: contact.text,
-          value3: mail.text,
-          value4: about.text,
-          value5: '',
-        ),
-      ),
-    );
+  Future<void> _saveProfile() async {
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('No user logged in');
+      }
+
+      // Update profile in Supabase
+      await _supabase.from('user_profiles').upsert({
+        'id': userId,
+        'name': name.text.trim(),
+        'phone': contact.text.trim(),
+        'email': mail.text.trim(),
+        'about': about.text.trim(),
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully!'),
+            backgroundColor: Color(0xFF2D5F5D),
+          ),
+        );
+        Navigator.pop(context, true); // Return true to indicate success
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating profile: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 
   @override
@@ -65,23 +100,29 @@ class _EditpgState extends State<Editpg> {
             color: Colors.white,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: Icon(Icons.home, color: Colors.white),
-          ),
-        ],
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Body(
         name: name,
         contact: contact,
         mail: mail,
         about: about,
-        navigate: navigate,
+        isSaving: _isSaving,
+        onSave: _saveProfile,
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    name.dispose();
+    contact.dispose();
+    mail.dispose();
+    about.dispose();
+    super.dispose();
   }
 }
 
@@ -92,14 +133,16 @@ class Body extends StatelessWidget {
     required this.contact,
     required this.mail,
     required this.about,
-    required this.navigate,
+    required this.isSaving,
+    required this.onSave,
   });
 
   final TextEditingController name;
   final TextEditingController contact;
   final TextEditingController mail;
   final TextEditingController about;
-  final VoidCallback navigate;
+  final bool isSaving;
+  final VoidCallback onSave;
 
   @override
   Widget build(BuildContext context) {
@@ -130,6 +173,7 @@ class Body extends StatelessWidget {
             SizedBox(height: 20),
             TextField(
               controller: contact,
+              keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 prefixIcon: Icon(Icons.phone),
                 labelText: "Contact No",
@@ -141,6 +185,7 @@ class Body extends StatelessWidget {
             SizedBox(height: 20),
             TextField(
               controller: mail,
+              keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
                 prefixIcon: Icon(Icons.email),
                 labelText: "Email",
@@ -166,7 +211,7 @@ class Body extends StatelessWidget {
               width: double.infinity,
               height: 57,
               child: ElevatedButton(
-                onPressed: navigate,
+                onPressed: isSaving ? null : onSave,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF2D5F5D),
                   foregroundColor: Colors.white,
@@ -176,14 +221,25 @@ class Body extends StatelessWidget {
                   ),
                   elevation: 2,
                 ),
-                child: const Text(
-                  "Save",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
-                  ),
-                ),
+                child: isSaving
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
+                        ),
+                      )
+                    : const Text(
+                        "Save",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
               ),
             ),
           ],
