@@ -50,13 +50,7 @@ class _HomeState extends State<Home> {
     const Body(),
     const ExplorePage(),
     const SavedPage(),
-    const Profilepg(
-      value1: 'John Doe',
-      value2: '+1 234 567 8900',
-      value3: 'johndoe@example.com',
-      value4: 'Travel enthusiast and adventure seeker',
-      value5: '',
-    ),
+    const Profilepg(),
   ];
 
   void _onItemTapped(int index) {

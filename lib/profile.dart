@@ -1,27 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'edit_profile.dart';
 
 class Profilepg extends StatefulWidget {
-  const Profilepg({
-    super.key,
-    required this.value1,
-    required this.value2,
-    required this.value3,
-    required this.value4,
-    required this.value5,
-  });
-
-  final String value1;
-  final String value2;
-  final String value3;
-  final String value4;
-  final String value5;
+  const Profilepg({super.key});
 
   @override
   State<Profilepg> createState() => _ProfilepgState();
 }
 
 class _ProfilepgState extends State<Profilepg> {
+  final _supabase = Supabase.instance.client;
+  bool _isLoading = true;
+  Map<String, dynamic>? _profileData;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) return;
+
+      final response = await _supabase
+          .from('user_profiles')
+          .select()
+          .eq('id', userId)
+          .single();
+
+      setState(() {
+        _profileData = response;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading profile: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,40 +62,33 @@ class _ProfilepgState extends State<Profilepg> {
           ),
         ),
       ),
-      body: Body(
-        value1: widget.value1,
-        value2: widget.value2,
-        value3: widget.value3,
-        value4: widget.value4,
-        value5: widget.value5,
-      ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Body(
+              profileData: _profileData ?? {},
+              onProfileUpdated: _loadProfile,
+            ),
     );
   }
 }
 
-class Body extends StatefulWidget {
+class Body extends StatelessWidget {
   const Body({
     super.key,
-    required this.value1,
-    required this.value2,
-    required this.value3,
-    required this.value4,
-    required this.value5,
+    required this.profileData,
+    required this.onProfileUpdated,
   });
 
-  final String value1;
-  final String value2;
-  final String value3;
-  final String value4;
-  final String value5;
+  final Map<String, dynamic> profileData;
+  final VoidCallback onProfileUpdated;
 
-  @override
-  State<Body> createState() => _BodyState();
-}
-
-class _BodyState extends State<Body> {
   @override
   Widget build(BuildContext context) {
+    final name = profileData['name'] ?? '';
+    final phone = profileData['phone'] ?? '';
+    final email = profileData['email'] ?? '';
+    final about = profileData['about'] ?? '';
+
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
@@ -94,19 +112,22 @@ class _BodyState extends State<Body> {
                       top: 0,
                       right: 0,
                       child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => Editpg(
-                                value1: widget.value1,
-                                value2: widget.value2,
-                                value3: widget.value3,
-                                value4: widget.value4,
-                                value5: widget.value5,
+                                value1: name,
+                                value2: phone,
+                                value3: email,
+                                value4: about,
+                                value5: '',
                               ),
                             ),
                           );
+                          if (result == true) {
+                            onProfileUpdated();
+                          }
                         },
                         child: Container(
                           padding: EdgeInsets.all(8),
@@ -150,7 +171,7 @@ class _BodyState extends State<Body> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(left: 34),
-                              child: Text(widget.value1),
+                              child: Text(name),
                             ),
                           ],
                         ),
@@ -169,7 +190,7 @@ class _BodyState extends State<Body> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(left: 34),
-                              child: Text(widget.value2),
+                              child: Text(phone.isEmpty ? 'Not provided' : phone),
                             ),
                           ],
                         ),
@@ -188,7 +209,7 @@ class _BodyState extends State<Body> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(left: 34),
-                              child: Text(widget.value3),
+                              child: Text(email),
                             ),
                           ],
                         ),
@@ -207,7 +228,7 @@ class _BodyState extends State<Body> {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(left: 34),
-                              child: Text(widget.value4),
+                              child: Text(about),
                             ),
                           ],
                         ),
