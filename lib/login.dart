@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:venture/auth/authService.dart';
+import 'auth/authService.dart';
 import 'register.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -291,7 +292,7 @@ class _LoginpgState extends State<Loginpg> {
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
-                    onPressed:() async {
+                    onPressed: () async {
                       try {
                         await authservice.signInWithGoogle();
                       } catch (e) {

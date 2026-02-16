@@ -5,7 +5,6 @@ import 'package:venture/login.dart';
 import 'package:venture/main.dart';
 import 'package:venture/saved_places_manager.dart';
 
-
 class Authgate extends StatelessWidget {
   const Authgate({super.key});
 
@@ -22,13 +21,19 @@ class Authgate extends StatelessWidget {
 
         if (session != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            final savedPlacesManager = Provider.of<SavedPlacesManager>(context, listen: false);
+            final savedPlacesManager = Provider.of<SavedPlacesManager>(
+              context,
+              listen: false,
+            );
             savedPlacesManager.loadSavedPlaces();
           });
           return Home();
         } else {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            final savedPlacesManager = Provider.of<SavedPlacesManager>(context, listen: false);
+            final savedPlacesManager = Provider.of<SavedPlacesManager>(
+              context,
+              listen: false,
+            );
             savedPlacesManager.clearSavedPlaces();
           });
           return Loginpg();
