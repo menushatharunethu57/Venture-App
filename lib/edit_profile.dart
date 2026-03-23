@@ -155,7 +155,6 @@ class _EditpgState extends State<Editpg> {
             fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
           );
 
-      // Get public URL
       final publicUrl = _supabase.storage
           .from('profile-pictures')
           .getPublicUrl(filePath);
@@ -169,7 +168,6 @@ class _EditpgState extends State<Editpg> {
 
   Future<void> _deleteOldProfilePicture(String oldUrl) async {
     try {
-      // Extract file path from URL
       final uri = Uri.parse(oldUrl);
       final pathSegments = uri.pathSegments;
 
@@ -180,8 +178,7 @@ class _EditpgState extends State<Editpg> {
         await _supabase.storage.from('profile-pictures').remove([filePath]);
       }
     } catch (e) {
-      debugPrint('Error deleting old profile picture: $e');
-      // Don't throw - this is not critical
+      debugPrint('Error deleting old profile picture: $e');  
     }
   }
 
