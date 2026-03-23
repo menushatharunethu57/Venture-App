@@ -1,4 +1,6 @@
-import 'dart:convert';
+
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:venture/auth/authService.dart';
 import 'register.dart';
@@ -270,7 +272,11 @@ class _LoginpgState extends State<Loginpg> {
                   OutlinedButton.icon(
                     onPressed: () async {
                       try {
-                        await authservice.signInWithGoogle();
+                        if (!kIsWeb && (Platform.isIOS || Platform.isAndroid)) {
+                          await authservice.nativeGoogleSignIn();
+                        } else {
+                          await authservice.signInWithGoogle();
+                        }
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -291,7 +297,7 @@ class _LoginpgState extends State<Loginpg> {
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton.icon(
-                    onPressed:() async {
+                    onPressed: () async {
                       try {
                         await authservice.signInWithGoogle();
                       } catch (e) {

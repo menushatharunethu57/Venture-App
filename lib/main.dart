@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:venture/auth/authgate.dart';
-import 'login.dart';
+//import 'login.dart';
 import 'category_detail_page.dart';
 import 'profile.dart';
 import 'saved_places_manager.dart';
@@ -61,7 +61,7 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    BottomNavigationBarItem _navItem(
+    BottomNavigationBarItem navItem(
       IconData icon,
       IconData activeIcon,
       String label,
@@ -123,10 +123,10 @@ class _HomeState extends State<Home> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: [
-          _navItem(Icons.home_outlined, Icons.home, 'Home', 0),
-          _navItem(Icons.explore_outlined, Icons.explore, 'Explore', 1),
-          _navItem(Icons.favorite_outline, Icons.favorite, 'Saved', 2),
-          _navItem(Icons.person_outline, Icons.person, 'Profile', 3),
+          navItem(Icons.home_outlined, Icons.home, 'Home', 0),
+          navItem(Icons.explore_outlined, Icons.explore, 'Explore', 1),
+          navItem(Icons.favorite_outline, Icons.favorite, 'Saved', 2),
+          navItem(Icons.person_outline, Icons.person, 'Profile', 3),
         ],
       ),
     );

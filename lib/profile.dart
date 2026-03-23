@@ -88,6 +88,7 @@ class Body extends StatelessWidget {
     final phone = profileData['phone'] ?? '';
     final email = profileData['email'] ?? '';
     final about = profileData['about'] ?? '';
+    final profile = profileData['profile_picture_url'] ?? '';
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -99,15 +100,18 @@ class Body extends StatelessWidget {
               Center(
                 child: Stack(
                   children: [
-                    CircleAvatar(
-                      backgroundColor: Colors.grey[300],
-                      radius: 60,
-                      child: Icon(
-                        Icons.person,
-                        size: 80,
-                        color: Colors.grey[600],
-                      ),
-                    ),
+                    profile.toString().isNotEmpty
+                        ? CircleAvatar(
+                            backgroundColor: Colors.grey[300],
+                            radius: 60,
+                            backgroundImage: NetworkImage(profile),
+                          )
+                        : CircleAvatar(
+                            backgroundColor: Colors.grey[300],
+                            radius: 60,
+                            child: Icon(Icons.person),
+                          ),
+
                     Positioned(
                       top: 0,
                       right: 0,
@@ -190,7 +194,9 @@ class Body extends StatelessWidget {
                             ),
                             Padding(
                               padding: const EdgeInsets.only(left: 34),
-                              child: Text(phone.isEmpty ? 'Not provided' : phone),
+                              child: Text(
+                                phone.isEmpty ? 'Not provided' : phone,
+                              ),
                             ),
                           ],
                         ),
