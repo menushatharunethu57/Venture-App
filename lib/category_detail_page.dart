@@ -64,7 +64,7 @@ class CategoryDetailPage extends StatelessWidget {
           height: 120,
           child: Row(
             children: [
-              Container(
+              SizedBox(
                 width: 120,
                 height: 120,
                 child: Image.network(

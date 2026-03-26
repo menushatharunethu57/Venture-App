@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -33,7 +33,9 @@ class _EditpgState extends State<Editpg> {
   TextEditingController about = TextEditingController();
 
   bool _isSaving = false;
-  File? _selectedImage;
+
+  Uint8List? _selectedImageBytes;
+  String? _selectedImageExt;
   String? _currentProfilePictureUrl;
 
   @override
@@ -46,6 +48,31 @@ class _EditpgState extends State<Editpg> {
     _currentProfilePictureUrl = widget.value5.isEmpty ? null : widget.value5;
   }
 
+  /// Safely resolve the file extension from an XFile.
+  /// On web, XFile.path is a blob URL so we must use XFile.name or mimeType.
+  String _getExtension(XFile file) {
+    // 1. Try XFile.name (e.g. "photo.jpg") — works on web and mobile
+    final name = file.name;
+    if (name.contains('.')) {
+      final ext = name.split('.').last.toLowerCase();
+      if (ext.isNotEmpty && !ext.contains('/') && !ext.contains(':')) {
+        return ext;
+      }
+    }
+
+    // 2. Try mimeType (e.g. "image/jpeg") — available on most platforms
+    final mime = file.mimeType;
+    if (mime != null && mime.contains('/')) {
+      final sub = mime.split('/').last.toLowerCase();
+      // Normalize "jpeg" aliases
+      if (sub == 'jpeg') return 'jpg';
+      return sub;
+    }
+
+    // 3. Fallback
+    return 'jpg';
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? pickedFile = await _imagePicker.pickImage(
@@ -56,8 +83,12 @@ class _EditpgState extends State<Editpg> {
       );
 
       if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
+        final ext = _getExtension(pickedFile);
+
         setState(() {
-          _selectedImage = File(pickedFile.path);
+          _selectedImageBytes = bytes;
+          _selectedImageExt = ext;
         });
       }
     } catch (e) {
@@ -85,19 +116,19 @@ class _EditpgState extends State<Editpg> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                const Text(
                   'Choose Profile Picture',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF2D5F5D),
+                    color: Color(0xFF2D5F5D),
                   ),
                 ),
                 const SizedBox(height: 20),
                 ListTile(
-                  leading: Icon(
+                  leading: const Icon(
                     Icons.camera_alt,
-                    color: const Color(0xFF2D5F5D),
+                    color: Color(0xFF2D5F5D),
                   ),
                   title: const Text('Take Photo'),
                   onTap: () {
@@ -106,9 +137,9 @@ class _EditpgState extends State<Editpg> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(
+                  leading: const Icon(
                     Icons.photo_library,
-                    color: const Color(0xFF2D5F5D),
+                    color: Color(0xFF2D5F5D),
                   ),
                   title: const Text('Choose from Gallery'),
                   onTap: () {
@@ -116,14 +147,16 @@ class _EditpgState extends State<Editpg> {
                     _pickImage(ImageSource.gallery);
                   },
                 ),
-                if (_currentProfilePictureUrl != null || _selectedImage != null)
+                if (_currentProfilePictureUrl != null ||
+                    _selectedImageBytes != null)
                   ListTile(
-                    leading: Icon(Icons.delete, color: Colors.redAccent),
+                    leading: const Icon(Icons.delete, color: Colors.redAccent),
                     title: const Text('Remove Photo'),
                     onTap: () {
                       Navigator.pop(context);
                       setState(() {
-                        _selectedImage = null;
+                        _selectedImageBytes = null;
+                        _selectedImageExt = null;
                         _currentProfilePictureUrl = null;
                       });
                     },
@@ -136,26 +169,30 @@ class _EditpgState extends State<Editpg> {
     );
   }
 
-  Future<String?> _uploadProfilePicture(File imageFile) async {
+  Future<String?> _uploadProfilePicture(Uint8List bytes, String fileExt) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) throw Exception('No user logged in');
 
-      final fileExt = imageFile.path.split('.').last;
       final fileName =
           '$userId-${DateTime.now().millisecondsSinceEpoch}.$fileExt';
       final filePath = 'profile-pictures/$fileName';
 
-      // Upload to Supabase Storage
+      // contentType must be a clean "image/jpg" — never a blob URL
+      final contentType = 'image/$fileExt';
+
       await _supabase.storage
           .from('profile-pictures')
-          .upload(
+          .uploadBinary(
             filePath,
-            imageFile,
-            fileOptions: const FileOptions(cacheControl: '3600', upsert: true),
+            bytes,
+            fileOptions: FileOptions(
+              cacheControl: '3600',
+              upsert: true,
+              contentType: contentType,
+            ),
           );
 
-      // Get public URL
       final publicUrl = _supabase.storage
           .from('profile-pictures')
           .getPublicUrl(filePath);
@@ -169,7 +206,6 @@ class _EditpgState extends State<Editpg> {
 
   Future<void> _deleteOldProfilePicture(String oldUrl) async {
     try {
-      // Extract file path from URL
       final uri = Uri.parse(oldUrl);
       final pathSegments = uri.pathSegments;
 
@@ -181,7 +217,6 @@ class _EditpgState extends State<Editpg> {
       }
     } catch (e) {
       debugPrint('Error deleting old profile picture: $e');
-      // Don't throw - this is not critical
     }
   }
 
@@ -192,28 +227,24 @@ class _EditpgState extends State<Editpg> {
 
     try {
       final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) {
-        throw Exception('No user logged in');
-      }
+      if (userId == null) throw Exception('No user logged in');
 
       String? profilePictureUrl = _currentProfilePictureUrl;
 
-      // Upload new image if selected
-      if (_selectedImage != null) {
-        // Delete old profile picture if exists
+      if (_selectedImageBytes != null && _selectedImageExt != null) {
         if (_currentProfilePictureUrl != null &&
             _currentProfilePictureUrl!.isNotEmpty) {
           await _deleteOldProfilePicture(_currentProfilePictureUrl!);
         }
-
-        profilePictureUrl = await _uploadProfilePicture(_selectedImage!);
+        profilePictureUrl = await _uploadProfilePicture(
+          _selectedImageBytes!,
+          _selectedImageExt!,
+        );
       } else if (_currentProfilePictureUrl == null &&
           widget.value5.isNotEmpty) {
-        // User removed the profile picture
         await _deleteOldProfilePicture(widget.value5);
       }
 
-      // Update profile in Supabase
       await _supabase.from('user_profiles').upsert({
         'id': userId,
         'name': name.text.trim(),
@@ -231,7 +262,7 @@ class _EditpgState extends State<Editpg> {
             backgroundColor: Color(0xFF2D5F5D),
           ),
         );
-        Navigator.pop(context, true); // Return true to indicate success
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -256,7 +287,7 @@ class _EditpgState extends State<Editpg> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF2D5F5D),
-        title: Text(
+        title: const Text(
           "Edit Profile",
           style: TextStyle(
             fontWeight: FontWeight.bold,
@@ -277,7 +308,7 @@ class _EditpgState extends State<Editpg> {
         about: about,
         isSaving: _isSaving,
         onSave: _saveProfile,
-        selectedImage: _selectedImage,
+        selectedImageBytes: _selectedImageBytes,
         currentProfilePictureUrl: _currentProfilePictureUrl,
         onImageTap: _showImageSourceDialog,
       ),
@@ -303,7 +334,7 @@ class Body extends StatelessWidget {
     required this.about,
     required this.isSaving,
     required this.onSave,
-    required this.selectedImage,
+    required this.selectedImageBytes,
     required this.currentProfilePictureUrl,
     required this.onImageTap,
   });
@@ -314,18 +345,31 @@ class Body extends StatelessWidget {
   final TextEditingController about;
   final bool isSaving;
   final VoidCallback onSave;
-  final File? selectedImage;
+  final Uint8List? selectedImageBytes;
   final String? currentProfilePictureUrl;
   final VoidCallback onImageTap;
 
+  ImageProvider? _resolveImage() {
+    if (selectedImageBytes != null) {
+      return MemoryImage(selectedImageBytes!);
+    }
+    if (currentProfilePictureUrl != null &&
+        currentProfilePictureUrl!.isNotEmpty) {
+      return NetworkImage(currentProfilePictureUrl!);
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final imageProvider = _resolveImage();
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(30.0),
         child: Column(
           children: [
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             Center(
               child: Stack(
                 children: [
@@ -334,17 +378,8 @@ class Body extends StatelessWidget {
                     child: CircleAvatar(
                       backgroundColor: Colors.grey[300],
                       radius: 60,
-                      backgroundImage: selectedImage != null
-                          ? FileImage(selectedImage!)
-                          : (currentProfilePictureUrl != null &&
-                                        currentProfilePictureUrl!.isNotEmpty
-                                    ? NetworkImage(currentProfilePictureUrl!)
-                                    : null)
-                                as ImageProvider?,
-                      child:
-                          (selectedImage == null &&
-                              (currentProfilePictureUrl == null ||
-                                  currentProfilePictureUrl!.isEmpty))
+                      backgroundImage: imageProvider,
+                      child: imageProvider == null
                           ? Icon(
                               Icons.person,
                               size: 80,
@@ -359,13 +394,13 @@ class Body extends StatelessWidget {
                     child: GestureDetector(
                       onTap: onImageTap,
                       child: Container(
-                        padding: EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Color(0xFF2D5F5D),
+                          color: const Color(0xFF2D5F5D),
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.white, width: 3),
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.camera_alt,
                           color: Colors.white,
                           size: 20,
@@ -376,47 +411,47 @@ class Body extends StatelessWidget {
                 ],
               ),
             ),
-            SizedBox(height: 50),
+            const SizedBox(height: 50),
             TextField(
               controller: name,
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.person),
+                prefixIcon: const Icon(Icons.person),
                 labelText: "Name",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextField(
               controller: contact,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.phone),
+                prefixIcon: const Icon(Icons.phone),
                 labelText: "Contact No",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextField(
               controller: mail,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.email),
+                prefixIcon: const Icon(Icons.email),
                 labelText: "Email",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             TextField(
               controller: about,
               maxLines: 4,
               decoration: InputDecoration(
-                prefixIcon: Icon(Icons.info),
+                prefixIcon: const Icon(Icons.info),
                 labelText: "About",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),

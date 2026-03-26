@@ -460,7 +460,7 @@ class _ExplorePageState extends State<ExplorePage> {
             // Image with heart button
             Stack(
               children: [
-                Container(
+                SizedBox(
                   height: 140,
                   width: double.infinity,
                   child: Image.network(
